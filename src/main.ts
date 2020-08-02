@@ -15,9 +15,19 @@ async function main(): Promise<void> {
     repo.checkout("a-feature", {createBranch: true});
     repo.commit("Make it work");
     repo.commit("Make it right");
+
+    repo.withHead("develop", () => {
+        repo.commit("Another developer's work");
+    });
+
+    repo.merge("develop");
+
     repo.commit("Make it fast");
 
     repo.checkout("develop");
+    repo.commit("A");
+    repo.commit("B");
+    repo.commit("C");
     repo.merge("a-feature");
     repo.commit("Prepare v1");
 

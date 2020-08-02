@@ -172,4 +172,11 @@ export class Repo {
         ]);
     }
 
+    withHead(ref: Ref | string, block: (repo: Repo) => void): void {
+        const old = this.currentHead;
+        this.checkout(ref);
+        block(this);
+        this.checkout(old);
+    }
+
 }

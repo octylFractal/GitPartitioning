@@ -192,13 +192,22 @@ function linkCommits(context: RenderContext,
     ctx.strokeStyle = branchColor(resolveBranch(from, to));
     ctx.lineWidth = circleDiameter / 5;
     strokePath(ctx, () => {
+        const fromTs = from.commit.timestamp;
+        const toTs = to.commit.timestamp;
         ctx.moveTo(
             from.depth * depthMult,
-            (maxTimestamp - from.commit.timestamp) * spacing
+            (maxTimestamp - fromTs) * spacing
         );
+        if (fromTs - toTs > 1 && from.depth !== to.depth) {
+            // move out to branch depth
+            ctx.lineTo(
+                to.depth * depthMult,
+                (maxTimestamp - fromTs + 1) * spacing
+            );
+        }
         ctx.lineTo(
             to.depth * depthMult,
-            (maxTimestamp - to.commit.timestamp) * spacing
+            (maxTimestamp - toTs) * spacing
         );
     });
     // fill it in by stroking smaller
