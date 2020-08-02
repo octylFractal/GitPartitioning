@@ -16,12 +16,11 @@ export async function renderGitGraph(canvas: Canvas, repo: Repo, from: Ref): Pro
     const maxTimestamp = repo.resolveCommit(from.resolve()).timestamp;
     const maxDepth = Math.max(...Array.from(data.commits.values())
         .map(c => c.depth));
-    const maxText = Math.max(...Array.from(data.commits.values())
-        .map(c => c.fullText.length));
     const ctx = canvas.getContext("2d");
-    // assumes monospace!
-    const letterSize = ctx.measureText("m").width;
-    canvas.width = 40 + (maxDepth + 1) * 20 + maxText * letterSize;
+    ctx.font = FONT;
+    const maxTextSize = Math.max(...Array.from(data.commits.values())
+        .map(c => ctx.measureText(c.fullText).width));
+    canvas.width = 40 + (maxDepth + 1) * 20 + maxTextSize;
     canvas.height = 40 + maxTimestamp * (20 * 1.25);
     ctx.translate(20, 20);
     const branches = Array.from(new Set(Array.from(data.commits.values()).map(x => x.branch)));
