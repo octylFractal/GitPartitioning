@@ -36,7 +36,7 @@ async function main(): Promise<void> {
 
     const canvas = createCanvas(1280, 720, 'svg');
 
-    await renderGitGraph(canvas, repo, new BranchRef(repo, "master"));
+    renderGitGraph(canvas, repo, new BranchRef(repo, "master"));
 
     await fs.writeFile("./test.svg", canvas.toBuffer());
 }

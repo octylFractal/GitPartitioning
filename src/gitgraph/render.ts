@@ -6,7 +6,7 @@ import chroma from "chroma-js";
 
 const FONT = "14px monospace";
 
-export async function renderGitGraph(canvas: Canvas, repo: Repo, from: Ref): Promise<void> {
+export function renderGitGraph(canvas: Canvas, repo: Repo, from: Ref): void {
     const data = prepareRender(true, from, {
         repo,
         seen: new Set(),
