@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import * as fs from "fs/promises";
-import {createCanvas} from "canvas";
+import {createCanvas, registerFont} from "canvas";
 import {Renderer} from "./gitgraph/render";
 import {BranchRef, Repo} from "./gitgraph/repo";
 
@@ -34,6 +34,9 @@ async function main(): Promise<void> {
     repo.checkout("master");
     repo.merge("develop");
 
+    registerFont("./src/ttf/JetBrainsMono-Regular.ttf", {
+        family: "JetBrains Mono",
+    });
     const canvas = createCanvas(1280, 720, 'svg');
 
     new Renderer(canvas, repo, '14px "JetBrains Mono"').render(new BranchRef(repo, "master"));
