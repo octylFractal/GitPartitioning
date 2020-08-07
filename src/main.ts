@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import * as fs from "fs/promises";
 import {createCanvas} from "canvas";
-import {renderGitGraph} from "./gitgraph/render";
+import {Renderer} from "./gitgraph/render";
 import {BranchRef, Repo} from "./gitgraph/repo";
 
 async function main(): Promise<void> {
@@ -36,7 +36,7 @@ async function main(): Promise<void> {
 
     const canvas = createCanvas(1280, 720, 'svg');
 
-    renderGitGraph(canvas, repo, new BranchRef(repo, "master"));
+    new Renderer(canvas, repo, '14px "JetBrains Mono"').render(new BranchRef(repo, "master"));
 
     await fs.writeFile("./test.svg", canvas.toBuffer());
 }
