@@ -1,47 +1,45 @@
 #!/usr/bin/env node
 import * as fs from "fs/promises";
-import {createCanvas, registerFont} from "canvas";
-import {Renderer} from "./gitgraph/render";
-import {BranchRef, Repo} from "./gitgraph/repo";
+import {registerFont} from "canvas";
+
+const FILES = [
+    "index",
+];
 
 async function main(): Promise<void> {
-    const repo = new Repo();
-
-    repo.commit("Initial commit");
-
-    repo.checkout("develop", {createBranch: true});
-    repo.commit("Add TypeScript");
-
-    repo.checkout("a-feature", {createBranch: true});
-    repo.commit("Make it work");
-    repo.commit("Make it right");
-
-    repo.withHead("develop", () => {
-        repo.commit("Another developer's work");
-    });
-
-    repo.merge("master");
-
-    repo.commit("Make it fast");
-
-    repo.checkout("develop");
-    repo.commit("A");
-    repo.commit("B");
-    repo.commit("C");
-    repo.merge("a-feature");
-    repo.commit("Prepare v1");
-
-    repo.checkout("master");
-    repo.merge("develop");
-
+    const unlinks: Promise<void>[] = [];
+    const directory = "./docs/img";
+    for (const path of await fs.readdir(directory)) {
+        unlinks.push(fs.unlink(`${directory}/${path}`));
+    }
+    await Promise.all(unlinks);
     registerFont("./src/ttf/JetBrainsMono-Regular.ttf", {
         family: "JetBrains Mono",
     });
-    const canvas = createCanvas(1280, 720, 'svg');
-
-    new Renderer(canvas, repo, '14px "JetBrains Mono"').render(new BranchRef(repo, "master"));
-
-    await fs.writeFile("./test.svg", canvas.toBuffer());
+    const renderings = new Map<string, Promise<void>>();
+    for (const file of FILES) {
+        console.log(`Rendering ${file}...`);
+        renderings.set(file, renderToHtmlFile(file));
+    }
+    for (const [file, rendering] of renderings) {
+        await rendering;
+        console.log(`Finished rendering ${file}.`);
+    }
 }
 
-main().catch(err => console.error(err));
+interface ModuleWithContent {
+    readonly CONTENT: Promise<string> | string;
+}
+
+async function renderToHtmlFile(file: string): Promise<void> {
+    const content: string | undefined = await (import(`./docs/${file}`).then((x: ModuleWithContent) => x.CONTENT));
+    if (typeof content === "undefined") {
+        throw new Error(`No CONTENT variable exported from ${file}`);
+    }
+    await fs.writeFile(`./docs/${file}.html`, content);
+}
+
+main().catch(err => {
+    console.error(err);
+    process.exit(1);
+});

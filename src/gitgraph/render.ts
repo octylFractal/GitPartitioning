@@ -10,6 +10,8 @@ interface PrepareContext {
     branch: string | undefined;
 }
 
+const SPACING_FACTOR = 1.3;
+
 export class Renderer {
     constructor(
         private readonly canvas: Canvas,
@@ -31,15 +33,17 @@ export class Renderer {
         ctx.font = this.font;
         const maxTextSize = Math.max(...Array.from(data.commits.values())
             .map(c => ctx.measureText(c.fullText).width));
-        this.canvas.width = 40 + (maxDepth + 1) * 20 + maxTextSize;
-        this.canvas.height = 40 + maxTimestamp * (20 * 1.25);
+        const circleDiameter = 18;
+        const depthMult = 20;
+        this.canvas.width = 40 + (maxDepth + 1) * depthMult + maxTextSize;
+        this.canvas.height = 40 + maxTimestamp * (circleDiameter * SPACING_FACTOR);
         ctx.translate(20, 20);
         new RenderHelper(
             this.font,
             data,
             ctx,
-            15,
-            20,
+            circleDiameter,
+            depthMult,
             maxTimestamp,
             maxDepth,
         ).render();
@@ -87,7 +91,7 @@ export class Renderer {
                 parenText = asBranchTip.name;
             }
         }
-        const fullText = commit.description + (parenText ? ` (${parenText})` : "");
+        const fullText = `${commitRef.describe()} ${commit.description}${parenText ? ` (${parenText})` : ""}`;
 
         commits.set(commitRef.hash, {
             commit,
@@ -136,7 +140,7 @@ class RenderHelper {
     }
 
     get spacing(): number {
-        return this.circleDiameter * 1.3;
+        return this.circleDiameter * SPACING_FACTOR;
     }
 
     private branchColor(branch: string | undefined): string {

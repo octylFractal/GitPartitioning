@@ -1,0 +1,113 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" 
+          href="https://stackpath.bootstrapcdn.com/bootswatch/4.5.0/litera/bootstrap.min.css" 
+          integrity="sha384-Gr51humlTz50RfCwdBYgT+XvbSZqkm8Loa5nWlNrvUqCinoe6C6WUZKHS2WIRx5o"
+          crossorigin="anonymous">
+    <script defer src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
+            integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj"
+            crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+            integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN"
+            crossorigin="anonymous"></script>
+    <script defer src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"
+            integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV"
+            crossorigin="anonymous"></script>
+
+    <title>Git Partitioning</title>
+</head>
+<body>
+
+<div class="container-md">
+    <div class="jumbotron m-3">
+        <h1 class="display-4">Git Partitioning</h1>
+        <p class="lead">
+        An alternative <code>git</code> management scheme.
+        </p>
+    </div>
+    <h1>Introduction</h1>
+<p>While developing WorldEdit after 7.1.0, we quickly ran into a problem where the non-finalized features on the
+<code>master</code> branch prevented us from releasing very important bug-fixes that are also on <code>master</code>.
+We should really have been able to put out a 7.1.1, 7.1.2, etc. to provide easier access to these small but
+necessary fixes, such as UTF-8 for localization and biome math.</p>
+<p>To alleviate this issue, I propose a new system of branch management for WorldEdit. This derives from
+<a href="https://nvie.com/posts/a-successful-git-branching-model/">Git Flow</a>.</p>
+<h1>The New Management</h1>
+<h2>Ideology</h2>
+<p>The primary ideology of this new branch management system is to <strong>avoid being locked in to any version</strong>.
+We should never delay bug-fixes because we have a feature in the same branch, and we should never postpone minor
+features because we introduced breaking changes.</p>
+<h2>Branches</h2>
+<p>There are 6 types of branches:</p>
+<ol>
+<li><code>master</code> The main branch. It contains bug-fixes merged from <code>release</code>, and features merged from feature branches.</li>
+<li><code>release</code> - The secondary branch. It contains tagged release commits, and then <em>only</em> bug-fixes. No feature
+branches are merged (directly) into <code>release</code>.</li>
+<li><code>version/M.m.P</code> - A temporary version branch that contains the bug-fixes being prepared for the next <code>release</code>.</li>
+<li><code>bugfix/*</code> - Bug-fix branches. These are optional, but should be used for larger bug-fixes or things which need
+approval. They are targeted to the <code>version/M.m.P</code> branch, not the <code>master</code> or <code>release</code> branches.</li>
+<li><code>feature/*</code> - Feature branches. These are non-optional. They are targeted to the <code>master</code> branch, not the
+<code>release</code> branch.</li>
+<li>Any other branch (such as one for GitHub issue templates, or README updates) should target <code>master</code>, as it is the
+<em>main</em> branch.</li>
+</ol>
+<p>With this model, we can continue to release bug-fixes while still adding new features without much hassle.</p>
+<h3>Published Branches</h3>
+<p>Only two branches are published to Maven, <code>master</code> and <code>release</code>. Even though the bug-fixes go into a
+<code>version/M.m.P</code> branch, since they are also included in <code>master</code> there is no need to push a release to maven
+including these fixes. If a developer needs them for work, they should use <code>master</code>, or wait for a fresh
+<code>release</code>.</p>
+<h2>Day-to-Day</h2>
+<p>If you've got a new bug-fix, it goes in the current <code>version/M.m.P</code> branch, or a new <code>bugfix/*</code> branch targeting the
+version branch. If you've got a new feature, make a <code>feature/*</code> branch and PR it to <code>master</code>.</p>
+<p>Besides the new rule for bug-fixes, not much changes here. If you need a bug-fix from a <code>version/M.m.P</code> branch, it may
+be merged into <code>master</code> at any time for the price of one merge commit. Generally this shouldn't be needed, as big
+bug-fixes will warrant triggering the <em>Patch Version Release Process</em> described below, which also merges the version
+branch into <code>master</code>.</p>
+<p>Any breaking changes should be avoided at all costs. If it is necessary to introduce breaking changes, or something has
+been deprecated for over 6 months, a major version release may be triggered, but the actual breaking changes should
+remain in a <code>feature/*</code> branch until we are ready to cut the release. Under no circumstances should a breaking change
+remain in <code>master</code> for more than 24 hours without a major version release following it.</p>
+<h2>Release Process</h2>
+<h3>Major/Minor Version</h3>
+<p>Assuming we are currently working on <code>7.1.P-SNAPSHOT</code> / <code>7.2.0-SNAPSHOT</code>:</p>
+<ol>
+<li>If present, any <code>version/7.1.P</code> branches are merged into <code>master</code> and removed.</li>
+<li><code>master</code> is merged into <code>release</code>.</li>
+<li>A commit is made to <code>release</code> changing the version to <code>7.2.0</code>.</li>
+<li>A <code>version/7.2.1</code> branch is made from the tip of <code>release</code>.</li>
+<li>A commit is made to <code>version/7.2.1</code> changing its version to <code>7.2.1-SNAPSHOT</code></li>
+<li>A commit is made to <code>master</code> changing its version to <code>7.3.0-SNAPSHOT</code>.</li>
+</ol>
+<p>This process is the same for a major version, except that the version number changes in the major part for releasing.</p>
+<h3>Patch Version</h3>
+<p>Assuming we are currently working on <code>7.2.P-SNAPSHOT</code> / <code>7.3.0-SNAPSHOT</code> (<code>Q</code> is the next patch version):</p>
+<ol>
+<li><code>version/7.2.P</code> is merged into <code>release</code> and <code>master</code>, then removed.</li>
+<li>A commit is made to <code>release</code> changing the version to <code>7.2.P</code>.</li>
+<li>A <code>version/7.2.Q</code> branch is made from the tip of <code>release</code>.</li>
+<li>A commit is made to <code>version/7.2.Q</code> changing its version to <code>7.2.Q-SNAPSHOT</code>.</li>
+</ol>
+<h3>Important Note about Merging Version Branches</h3>
+<p>One important part of merging any <code>version/M.m.P</code> branch into <code>master</code>, is that care must be taken not to overwrite
+<code>master</code>'s version with the version branch's version. This should result in a merge-conflict normally, just be sure to
+pick <code>master</code> as the winner of the conflict in this case.</p>
+<h2>EAQ (Expected-to-be Asked Questions)</h2>
+<ul>
+<li>Won't merging <code>version/M.m.P</code> into <code>master</code> create a lot of merge commits?
+<ul>
+<li>Yes, but it is worth not being able to release crucial fixes to end users. If you have a better proposal on how we
+could accomplish this, please write it up and present it.</li>
+</ul>
+</li>
+</ul>
+<p>(That's all the questions I expected!)</p>
+
+</div>
+
+</body>
+</html>
