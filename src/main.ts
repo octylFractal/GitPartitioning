@@ -20,7 +20,7 @@ async function main(): Promise<void> {
         repo.commit("Another developer's work");
     });
 
-    repo.merge("develop");
+    repo.merge("master");
 
     repo.commit("Make it fast");
 

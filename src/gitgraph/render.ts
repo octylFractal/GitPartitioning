@@ -25,10 +25,12 @@ export function renderGitGraph(canvas: Canvas, repo: Repo, from: Ref): void {
     ctx.translate(20, 20);
     const branches = Array.from(new Set(Array.from(data.commits.values()).map(x => x.branch)));
     const colors = chroma.brewer.Pastel1;
+    const circleDiameter = 15;
     render({
         data,
         ctx,
-        circleDiameter: 20,
+        circleDiameter,
+        spacing: circleDiameter * 1.3,
         depthMult: 20,
         maxTimestamp,
         maxDepth,
@@ -49,6 +51,7 @@ interface RenderContext {
     data: RenderingData;
     ctx: CanvasRenderingContext2D;
     circleDiameter: number;
+    spacing: number;
     depthMult: number;
     maxTimestamp: number;
     maxDepth: number;
@@ -84,8 +87,8 @@ function prepareRender(head: boolean, ref: Ref, context: PrepareContext): Render
     for (const [parentDepthOffset, parent] of commit.parents.entries()) {
         const parentDepth = branchDepth + parentDepthOffset;
         links.push({
-            from: commitRef.hash,
-            to: parent.hash,
+            from: parent.hash,
+            to: commitRef.hash,
         });
 
         if (seen.has(parent.hash)) {
@@ -94,7 +97,6 @@ function prepareRender(head: boolean, ref: Ref, context: PrepareContext): Render
         }
         seen.add(parent.hash);
 
-        // draw the actual commit later
         const parentBranch = parentDepthOffset === 0 ? branch : repo.asBranchTip(parent)?.name;
         const parentData = prepareRender(false, parent, {
             ...context,
@@ -130,18 +132,13 @@ function prepareRender(head: boolean, ref: Ref, context: PrepareContext): Render
     return new RenderingData(commits, links);
 }
 
-function calculateSpacing(context: RenderContext): number {
-    return context.circleDiameter * 1.25;
-}
-
 function render(context: RenderContext): void {
-    const {data, ctx, circleDiameter, depthMult, maxTimestamp, maxDepth, branchColor} = context;
+    const {data, ctx, circleDiameter, spacing, depthMult, maxTimestamp, maxDepth, branchColor} = context;
     for (const link of data.links) {
         const fromCommit = data.commits.get(link.from) || error("No `from` link");
         const toCommit = data.commits.get(link.to) || error("No `to` link");
         linkCommits(context, fromCommit, toCommit);
     }
-    const spacing = calculateSpacing(context);
     for (const commit of data.commits.values()) {
         ctx.lineWidth = 1;
         ctx.strokeStyle = branchColor(commit.branch);
@@ -187,41 +184,54 @@ function render(context: RenderContext): void {
 function linkCommits(context: RenderContext,
                      from: CommitRendering,
                      to: CommitRendering): void {
-    const {ctx, circleDiameter, depthMult, maxTimestamp, branchColor} = context;
-    const spacing = calculateSpacing(context);
-    ctx.strokeStyle = branchColor(resolveBranch(from, to));
+    const {ctx, branchColor} = context;
+
+    // if linking same depth:
+    // - just draw A to B in their color
+    // else:
+    // - FROM = A
+    // - if TS difference > 1:
+    //   - draw from A until (B.ts - 1) in current branch,
+    //     current branch color
+    //   - FROM = b.ts - 1
+    // - draw FROM to B
+    //   - color is determined by the deepest branch
+
+    ctx.lineCap = "round";
+    const fromTs = from.commit.timestamp;
+    const toTs = to.commit.timestamp;
+    if (from.depth === to.depth) {
+        drawLink(context, from.depth, fromTs, to.depth, toTs, branchColor(from.branch));
+    } else {
+        let fromY = fromTs;
+        if (Math.abs(fromTs - toTs) > 1) {
+            drawLink(context, from.depth, fromTs, from.depth, toTs - 1, branchColor(from.branch));
+            fromY = toTs - 1;
+        }
+        const deepest = from.depth > to.depth ? from : to;
+        drawLink(context, from.depth, fromY, to.depth, toTs, branchColor(deepest.branch));
+    }
+}
+
+function drawLink(context: RenderContext,
+                  fromX: number, fromY: number,
+                  toX: number, toY: number,
+                  color: string): void {
+    const {ctx, circleDiameter, spacing, depthMult, maxTimestamp} = context;
+    ctx.strokeStyle = color;
     ctx.lineWidth = circleDiameter / 5;
     strokePath(ctx, () => {
-        const fromTs = from.commit.timestamp;
-        const toTs = to.commit.timestamp;
         ctx.moveTo(
-            from.depth * depthMult,
-            (maxTimestamp - fromTs) * spacing
+            fromX * depthMult,
+            (maxTimestamp - fromY) * spacing,
         );
-        if (fromTs - toTs > 1 && from.depth !== to.depth) {
-            // move out to branch depth
-            ctx.lineTo(
-                to.depth * depthMult,
-                (maxTimestamp - fromTs + 1) * spacing
-            );
-        }
         ctx.lineTo(
-            to.depth * depthMult,
-            (maxTimestamp - toTs) * spacing
+            toX * depthMult,
+            (maxTimestamp - toY) * spacing,
         );
     });
     // fill it in by stroking smaller
     ctx.strokeStyle = "#333333";
     ctx.lineWidth = circleDiameter / 10;
     ctx.stroke();
-}
-
-function resolveBranch(from: CommitRendering, to: CommitRendering): string | undefined {
-    if (from.depth >= to.depth) {
-        // same branch OR merge
-        return from.branch;
-    } else {
-        // split
-        return to.branch;
-    }
 }
