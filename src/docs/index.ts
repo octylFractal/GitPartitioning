@@ -34,15 +34,15 @@ We should never delay bug-fixes because we have a feature in the same branch, an
 features because we introduced breaking changes.
 
 ## Branches
-There are 6 types of branches:
+There are 5 types of branches:
 1. \`master\` The main branch. It contains bug-fixes merged from version branches, and features merged from feature
     branches.
-3. \`version/M.m.X\` - Version branches that contains bug-fixes for the features in version \`M.m.0\`.
-4. \`bugfix/*\` - Bug-fix branches. These are optional, but should be used for larger bug-fixes or things which need
+2. \`version/M.m.X\` - Version branches that contains bug-fixes for the features in version \`M.m.0\`.
+3. \`bugfix/*\` - Bug-fix branches. These are optional, but should be used for larger bug-fixes or things which need
     approval. They are targeted to the \`version/M.m.X\` branch, not the \`master\` branch.
-5. \`feature/*\` - Feature branches. These are non-optional. They are targeted to the \`master\` branch, not the
+4. \`feature/*\` - Feature branches. These are non-optional. They are targeted to the \`master\` branch, not the
     \`version/M.m.X\` branches.
-6. Any other branch (such as one for GitHub issue templates, or README updates) should target \`master\`, as it is the
+5. Any other branch (such as one for GitHub issue templates, or README updates) should target \`master\`, as it is the
     *main* branch.
 
 With this model, we can continue to release bug-fixes while still adding new features without much hassle.
