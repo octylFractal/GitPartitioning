@@ -68,6 +68,9 @@ be merged into <code>master</code> at any time for the price of one merge commit
 been deprecated for over 6 months, a major version release may be triggered, but the actual breaking changes should
 remain in a <code>feature/*</code> branch until we are ready to cut the release. Under no circumstances should a breaking change
 remain in <code>master</code> for more than 24 hours without a major version release following it.</p>
+<h3>With Regard To Minecraft Versions</h3>
+<p>For the purposes of this document, a new Minecraft release is usually considered to be a <em>bugfix</em>, unless it requires
+us to introduce a new feature for some reason.</p>
 <h2>Release Process</h2>
 <h3>Patch Version</h3>
 <p>Assuming we are currently working on <code>7.2.P-SNAPSHOT</code> / <code>7.3.0-SNAPSHOT</code> (<code>Q</code> is the next patch version):</p>
@@ -87,8 +90,24 @@ remain in <code>master</code> for more than 24 hours without a major version rel
 <li>A commit is made to <code>master</code> changing its version to <code>7.3.0-SNAPSHOT</code>.</li>
 </ol>
 <p>This process is the same for a major version, except that the version number changes in the major part for releasing.</p>
+<h3>Beta and Release Candidate Versions</h3>
+<p>This is a special case, as we want to continue working in the same snapshot after these are dropped.
+It is very similar to Major/Minor as they are always created for the <code>master</code> branch.</p>
+<p>These versions should be formatted as <code>M.m.P-tagN</code>, where <code>tag</code> is either <code>beta</code> or <code>rc</code>, and <code>N</code> is at
+least 1.</p>
+<p>Assuming we are currently working on <code>7.1.P-SNAPSHOT</code> / <code>7.2.0-SNAPSHOT</code>, releasing <code>7.2.0-rc1</code>:</p>
+<ol>
+<li>If present, the <code>version/7.1.X</code> branch is merged into <code>master</code> <strong>but not removed</strong>!
+<ul>
+<li>This is done to ensure bugs are not reported again.</li>
+</ul>
+</li>
+<li>A commit is made to <code>master</code> changing the version to <code>7.2.0-rc1</code>.</li>
+<li>The commit is tagged with <code>7.2.0-rc1</code>.</li>
+<li>A commit is made to <code>master</code> changing its version to <code>7.2.0-SNAPSHOT</code>.</li>
+</ol>
 <h3>Example</h3>
-<p>A simple example including both processes.
+<p>A simple example including both normal processes.
 <img
     alt="Release Process"
     src="./img/test.svg"

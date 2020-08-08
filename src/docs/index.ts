@@ -1,5 +1,5 @@
 import {async, markdown} from "../page/tagged-templates";
-import {branchGraph, GraphContent, renderMarkdown, renderPage} from "../page/util";
+import {branchGraph, GraphContent, renderPage} from "../page/util";
 import {Repo} from "../gitgraph/repo";
 
 export const CONTENT = async`
@@ -63,6 +63,10 @@ been deprecated for over 6 months, a major version release may be triggered, but
 remain in a \`feature/*\` branch until we are ready to cut the release. Under no circumstances should a breaking change
 remain in \`master\` for more than 24 hours without a major version release following it.
 
+### With Regard To Minecraft Versions
+For the purposes of this document, a new Minecraft release is usually considered to be a _bugfix_, unless it requires
+us to introduce a new feature for some reason.
+
 ## Release Process
 
 ### Patch Version
@@ -82,8 +86,22 @@ Assuming we are currently working on \`7.1.P-SNAPSHOT\` / \`7.2.0-SNAPSHOT\`:
 
 This process is the same for a major version, except that the version number changes in the major part for releasing.
 
+### Beta and Release Candidate Versions
+This is a special case, as we want to continue working in the same snapshot after these are dropped.
+It is very similar to Major/Minor as they are always created for the \`master\` branch.
+
+These versions should be formatted as \`M.m.P-tagN\`, where \`tag\` is either \`beta\` or \`rc\`, and \`N\` is at
+least 1.
+
+Assuming we are currently working on \`7.1.P-SNAPSHOT\` / \`7.2.0-SNAPSHOT\`, releasing \`7.2.0-rc1\`:
+1. If present, the \`version/7.1.X\` branch is merged into \`master\` **but not removed**!
+    - This is done to ensure bugs are not reported again.
+2. A commit is made to \`master\` changing the version to \`7.2.0-rc1\`.
+3. The commit is tagged with \`7.2.0-rc1\`.
+6. A commit is made to \`master\` changing its version to \`7.2.0-SNAPSHOT\`.
+
 ### Example
-A simple example including both processes.
+A simple example including both normal processes.
 ${await branchGraph("release-process", "Release Process", releaseProcessGraph())}
 
 ### Important Note about Merging Version Branches
@@ -93,7 +111,7 @@ pick \`master\` as the winner of the conflict in this case.
 
 ## EAQ (Expected-to-be Asked Questions)
 - Won't merging \`version/M.m.X\` into \`master\` create a lot of merge commits?
-\t- Yes, but it is worth not being able to release crucial fixes to end users. If you have a better proposal on how we
+	- Yes, but it is worth not being able to release crucial fixes to end users. If you have a better proposal on how we
 could accomplish this, please write it up and present it.
 
 (That's all the questions I expected!)
