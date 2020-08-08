@@ -82,6 +82,7 @@ export class Repo {
     private commitTimestamp = 0;
     private readonly commits: Map<CommitHash, Commit> = new Map();
     private readonly internalBranches: Map<string, Ref> = new Map();
+    private readonly branchIndexes: string[] = [];
     private internalCurrentHead: Ref = new BranchRef(this, "master");
 
     resolveBranch(name: string): CommitRef {
@@ -90,6 +91,10 @@ export class Repo {
 
     tryResolveBranch(name: string): CommitRef | undefined {
         return this.internalBranches.get(name)?.tryResolve();
+    }
+
+    branchIndex(name: string | undefined): number {
+        return typeof name === "undefined" ? 0 : this.branchIndexes.indexOf(name) + 1;
     }
 
     resolveCommit(ref: CommitRef): Commit {
@@ -132,6 +137,9 @@ export class Repo {
         this.commits.set(ref.resolve().hash, commit);
         const head = this.currentHead;
         if (head instanceof BranchRef) {
+            if (this.branchIndex(head.name) === -1) {
+                this.branchIndexes.push(head.name);
+            }
             this.internalBranches.set(head.name, ref);
         } else {
             this.currentHead = ref;
@@ -146,6 +154,7 @@ export class Repo {
         if (ref instanceof BranchRef) {
             if (!this.internalBranches.has(ref.name)) {
                 if (options.createBranch) {
+                    this.branchIndexes.push(ref.name);
                     this.internalBranches.set(ref.name, this.currentHead);
                 } else {
                     throw new Error(`No branch with name ${ref.name}`);

@@ -6,7 +6,7 @@ import chroma from "chroma-js";
 
 interface PrepareContext {
     seen: Set<CommitHash>;
-    branchDepth: number;
+    minBranchDepth: { value: number };
     branch: string | undefined;
 }
 
@@ -21,11 +21,16 @@ export class Renderer {
     }
 
     render(from: Ref): void {
+        const minBranchDepth = { value: Number.MAX_SAFE_INTEGER };
         const data = this.prepareRender(true, from, {
             seen: new Set(),
-            branchDepth: 0,
+            minBranchDepth,
             branch: from instanceof BranchRef ? from.name : undefined,
-        });
+        })
+            .mapCommits(commits => new Map([...commits].map(([k, v]) => {
+                const newV = {...v, depth: v.depth - minBranchDepth.value};
+                return [k, newV];
+            })));
         const maxTimestamp = this.repo.resolveCommit(from.resolve()).timestamp;
         const maxDepth = Math.max(...Array.from(data.commits.values())
             .map(c => c.depth));
@@ -50,13 +55,12 @@ export class Renderer {
     }
 
     private prepareRender(head: boolean, ref: Ref, context: PrepareContext): RenderingData {
-        const {seen, branchDepth, branch} = context;
+        const {seen, minBranchDepth, branch} = context;
         const commits = new Map<CommitHash, CommitRendering>();
         const links: LinkRendering[] = [];
         const commitRef = ref.resolve();
         const commit = this.repo.resolveCommit(commitRef);
-        for (const [parentDepthOffset, parent] of commit.parents.entries()) {
-            const parentDepth = branchDepth + parentDepthOffset;
+        for (const [index, parent] of commit.parents.entries()) {
             links.push({
                 from: parent.hash,
                 to: commitRef.hash,
@@ -68,10 +72,9 @@ export class Renderer {
             }
             seen.add(parent.hash);
 
-            const parentBranch = parentDepthOffset === 0 ? branch : this.repo.asBranchTip(parent)?.name;
+            const parentBranch = index === 0 ? branch : this.repo.asBranchTip(parent)?.name;
             const parentData = this.prepareRender(false, parent, {
                 ...context,
-                branchDepth: parentDepth,
                 branch: parentBranch,
             });
             setAll(commits, parentData.commits);
@@ -81,6 +84,7 @@ export class Renderer {
         let parenText = head ? "HEAD" : "";
         const asBranchTip = this.repo.asBranchTip(ref);
         if (typeof asBranchTip !== "undefined") {
+            minBranchDepth.value = Math.min(minBranchDepth.value, this.repo.branchIndex(asBranchTip.name));
             if (head) {
                 if (ref instanceof BranchRef) {
                     parenText += ` -> ${asBranchTip.name}`;
@@ -95,7 +99,7 @@ export class Renderer {
 
         commits.set(commitRef.hash, {
             commit,
-            depth: branchDepth,
+            depth: this.repo.branchIndex(branch),
             branch,
             fullText,
         });
@@ -116,11 +120,17 @@ interface CommitRendering {
     fullText: string;
 }
 
+type CommitMap = Map<CommitHash, CommitRendering>;
+
 class RenderingData {
     constructor(
-        readonly commits: Map<CommitHash, CommitRendering>,
+        readonly commits: CommitMap,
         readonly links: LinkRendering[],
     ) {
+    }
+
+    mapCommits(transform: (commits: CommitMap) => CommitMap): RenderingData {
+        return new RenderingData(transform(this.commits), this.links);
     }
 }
 
