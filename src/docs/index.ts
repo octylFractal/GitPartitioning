@@ -77,7 +77,7 @@ Assuming we are currently working on \`7.2.P-SNAPSHOT\` / \`7.3.0-SNAPSHOT\` (\`
 
 ### Major/Minor Version
 Assuming we are currently working on \`7.1.P-SNAPSHOT\` / \`7.2.0-SNAPSHOT\`:
-1. If present, the \`version/7.1.X\` branch is merged into \`master\` and removed.
+1. If present, the \`version/7.1.X\` branch is merged into \`master\`.
 2. A commit is made to \`master\` changing the version to \`7.2.0\`.
 3. The commit is tagged with \`7.2.0\`.
 4. A \`version/7.2.X\` branch is made from the tip of \`master\`.
@@ -94,7 +94,7 @@ These versions should be formatted as \`M.m.P-tagN\`, where \`tag\` is either \`
 least 1.
 
 Assuming we are currently working on \`7.1.P-SNAPSHOT\` / \`7.2.0-SNAPSHOT\`, releasing \`7.2.0-rc1\`:
-1. If present, the \`version/7.1.X\` branch is merged into \`master\` **but not removed**!
+1. If present, the \`version/7.1.X\` branch is merged into \`master\`.
     - This is done to ensure bugs are not reported again.
 2. A commit is made to \`master\` changing the version to \`7.2.0-rc1\`.
 3. The commit is tagged with \`7.2.0-rc1\`.

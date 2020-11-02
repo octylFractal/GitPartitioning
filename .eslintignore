@@ -2,3 +2,5 @@
 node_modules
 # don't lint build output
 build
+# don't lint fonts
+src/ttf

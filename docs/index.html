@@ -43,7 +43,7 @@ necessary fixes, such as UTF-8 for localization and biome math.</p>
 We should never delay bug-fixes because we have a feature in the same branch, and we should never postpone minor
 features because we introduced breaking changes.</p>
 <h2>Branches</h2>
-<p>There are 6 types of branches:</p>
+<p>There are 5 types of branches:</p>
 <ol>
 <li><code>master</code> The main branch. It contains bug-fixes merged from version branches, and features merged from feature
 branches.</li>
@@ -82,7 +82,7 @@ us to introduce a new feature for some reason.</p>
 <h3>Major/Minor Version</h3>
 <p>Assuming we are currently working on <code>7.1.P-SNAPSHOT</code> / <code>7.2.0-SNAPSHOT</code>:</p>
 <ol>
-<li>If present, the <code>version/7.1.X</code> branch is merged into <code>master</code> and removed.</li>
+<li>If present, the <code>version/7.1.X</code> branch is merged into <code>master</code>.</li>
 <li>A commit is made to <code>master</code> changing the version to <code>7.2.0</code>.</li>
 <li>The commit is tagged with <code>7.2.0</code>.</li>
 <li>A <code>version/7.2.X</code> branch is made from the tip of <code>master</code>.</li>
@@ -97,7 +97,7 @@ It is very similar to Major/Minor as they are always created for the <code>maste
 least 1.</p>
 <p>Assuming we are currently working on <code>7.1.P-SNAPSHOT</code> / <code>7.2.0-SNAPSHOT</code>, releasing <code>7.2.0-rc1</code>:</p>
 <ol>
-<li>If present, the <code>version/7.1.X</code> branch is merged into <code>master</code> <strong>but not removed</strong>!
+<li>If present, the <code>version/7.1.X</code> branch is merged into <code>master</code>.
 <ul>
 <li>This is done to ensure bugs are not reported again.</li>
 </ul>
